@@ -14,7 +14,9 @@ if (Number.isNaN(port) || port <= 0) {
 
 const ollamaBaseUrl = process.env.OLLAMA_BASE_URL ?? "http://127.0.0.1:11434";
 const ollamaModel = process.env.OLLAMA_MODEL ?? "";
-const staticDir = process.env.STATIC_DIR ?? path.resolve(process.cwd(), "public");
+const staticDir = path.resolve(
+  process.env.STATIC_DIR ?? path.join(process.cwd(), "public"),
+);
 const isProduction = process.env.NODE_ENV === "production";
 
 if (!ollamaModel) {

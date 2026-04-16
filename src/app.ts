@@ -17,8 +17,9 @@ export function createApp(options: CreateAppOptions) {
   const app = express();
   const isProduction = options.isProduction ?? process.env.NODE_ENV === "production";
 
-  const staticDir =
-    options.staticDir ?? process.env.STATIC_DIR ?? path.resolve(process.cwd(), "public");
+  const staticDirInput =
+    options.staticDir ?? process.env.STATIC_DIR ?? path.join(process.cwd(), "public");
+  const staticDir = path.resolve(staticDirInput);
 
   app.use(helmet());
   app.use(
