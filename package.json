@@ -1,0 +1,44 @@
+{
+  "name": "simple-chat-app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "concurrently \"tsx watch src/server.ts\" \"esbuild src/frontend/app.ts --bundle --sourcemap --target=es2019 --platform=browser --format=esm --outfile=public/app.js --watch\"",
+    "build:backend": "tsc -p tsconfig.json",
+    "build:frontend": "esbuild src/frontend/app.ts --bundle --minify --sourcemap --target=es2019 --platform=browser --format=esm --outfile=public/app.js",
+    "build": "npm run build:backend && npm run build:frontend",
+    "start": "node dist/server.js",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.3.2",
+    "helmet": "^8.1.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/express-rate-limit": "^5.1.3",
+    "@types/helmet": "^0.0.48",
+    "@types/node": "^25.6.0",
+    "@types/supertest": "^7.2.0",
+    "concurrently": "^9.2.1",
+    "esbuild": "^0.28.0",
+    "supertest": "^7.2.2",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.4"
+  }
+}
