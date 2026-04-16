@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>AI Chat (Ollama)</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header>
+        <h1>AI Chat</h1>
+        <p class="sub">Powered by your local Ollama server.</p>
+      </header>
+
+      <section id="messages" class="messages" aria-live="polite"></section>
+
+      <form id="chatForm" class="composer" autocomplete="off">
+        <textarea
+          id="input"
+          rows="2"
+          placeholder="Type your message..."
+          required
+        ></textarea>
+        <button id="sendBtn" type="submit" disabled>Send</button>
+      </form>
+
+      <div id="status" class="status" role="status"></div>
+    </main>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
+
