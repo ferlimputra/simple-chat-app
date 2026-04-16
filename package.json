@@ -4,11 +4,11 @@
   "description": "",
   "main": "dist/server.js",
   "scripts": {
-    "dev": "concurrently \"tsx watch src/server.ts\" \"esbuild src/frontend/app.ts --bundle --sourcemap --target=es2019 --platform=browser --format=esm --outfile=public/app.js --watch\"",
+    "dev": "cross-env NODE_ENV=development concurrently \"tsx watch src/server.ts\" \"esbuild src/frontend/app.ts --bundle --sourcemap --target=es2019 --platform=browser --format=esm --outfile=public/app.js --watch\"",
     "build:backend": "tsc -p tsconfig.json",
     "build:frontend": "esbuild src/frontend/app.ts --bundle --minify --sourcemap --target=es2019 --platform=browser --format=esm --outfile=public/app.js",
     "build": "npm run build:backend && npm run build:frontend",
-    "start": "node dist/server.js",
+    "start": "cross-env NODE_ENV=production node dist/server.js",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
@@ -35,6 +35,7 @@
     "@types/node": "^25.6.0",
     "@types/supertest": "^7.2.0",
     "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
     "esbuild": "^0.28.0",
     "supertest": "^7.2.2",
     "tsx": "^4.21.0",

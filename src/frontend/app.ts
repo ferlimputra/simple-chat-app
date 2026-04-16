@@ -44,6 +44,12 @@ function setStatus(text: string, kind: "normal" | "error") {
   statusEl.classList.toggle("status--error", kind === "error");
 }
 
+function getRequestMessages(nextUserMessage: ChatMessage) {
+  return [...messages, nextUserMessage]
+    .filter((message) => message.content.trim().length > 0)
+    .slice(-maxContextMessages);
+}
+
 async function sendChat() {
   const content = inputEl.value.trim();
   if (!content) return;
@@ -51,6 +57,7 @@ async function sendChat() {
   // Optimistically append the user message.
   const userMessage: ChatMessage = { role: "user", content };
   const assistantMessage: ChatMessage = { role: "assistant", content: "" };
+  const requestMessages = getRequestMessages(userMessage);
 
   messages.push(userMessage);
   messages.push(assistantMessage);
@@ -67,7 +74,7 @@ async function sendChat() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        messages: messages.slice(-maxContextMessages),
+        messages: requestMessages,
       }),
       credentials: "same-origin",
     });

@@ -10,10 +10,12 @@ import { errorHandler } from "./middlewares/errorHandler";
 export type CreateAppOptions = {
   chatService: ChatService;
   staticDir?: string;
+  isProduction?: boolean;
 };
 
 export function createApp(options: CreateAppOptions) {
   const app = express();
+  const isProduction = options.isProduction ?? process.env.NODE_ENV === "production";
 
   const staticDir =
     options.staticDir ?? process.env.STATIC_DIR ?? path.resolve(process.cwd(), "public");
@@ -34,7 +36,18 @@ export function createApp(options: CreateAppOptions) {
     }),
   );
 
-  app.use(express.static(staticDir, { maxAge: "1h" }));
+  app.use(
+    express.static(staticDir, {
+      maxAge: isProduction ? "1h" : 0,
+      etag: true,
+      lastModified: true,
+      setHeaders: (res) => {
+        if (!isProduction) {
+          res.setHeader("Cache-Control", "no-store");
+        }
+      },
+    }),
+  );
 
   app.use("/api", healthRouter);
   app.use("/api", createChatRouter(options.chatService));
