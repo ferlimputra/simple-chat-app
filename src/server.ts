@@ -2,8 +2,8 @@ import dotenv from "dotenv";
 import fs from "node:fs";
 import path from "node:path";
 import { createApp } from "./app";
-import { OllamaClient } from "./services/ollamaClient";
 import { OllamaChatService } from "./services/ollamaChatService";
+import { OllamaClient } from "./services/ollamaClient";
 
 dotenv.config();
 
@@ -49,7 +49,5 @@ const app = createApp({
 });
 
 app.listen(port, () => {
-  // eslint-disable-next-line no-console
   console.log(`Server listening on http://localhost:${port}`);
 });
-

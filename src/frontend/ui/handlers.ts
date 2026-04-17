@@ -45,17 +45,21 @@ async function sendChat(): Promise<void> {
 export function setupEventHandlers(): void {
   if (!inputEl || !sendBtn || !chatForm) return;
 
-  inputEl.addEventListener("input", () => {
-    sendBtn.disabled = inputEl.value.trim().length === 0 || inputEl.disabled;
+  const input = inputEl;
+  const button = sendBtn;
+  const form = chatForm;
+
+  input.addEventListener("input", () => {
+    button.disabled = input.value.trim().length === 0 || input.disabled;
   });
 
-  chatForm.addEventListener("submit", (e) => {
+  form.addEventListener("submit", (e) => {
     e.preventDefault();
     void sendChat();
   });
 
   // Enable Ctrl+Enter to submit quickly.
-  inputEl.addEventListener("keydown", (e) => {
+  input.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
       void sendChat();

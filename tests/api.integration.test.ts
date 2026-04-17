@@ -1,9 +1,9 @@
 import path from "node:path";
-import { describe, expect, it, vi } from "vitest";
 import request from "supertest";
+import { describe, expect, it, vi } from "vitest";
 import { createApp } from "../src/app";
-import type { ChatService } from "../src/services/chatService";
 import { HttpError } from "../src/lib/httpErrors";
+import type { ChatService } from "../src/services/chatService";
 
 function createMockChatService(overrides?: Partial<ChatService>): ChatService {
   return {
@@ -54,10 +54,7 @@ describe("API integration", () => {
       staticDir: path.resolve(process.cwd(), "public"),
     });
 
-    await request(app)
-      .post("/api/chat")
-      .send({ messages: [] })
-      .expect(400);
+    await request(app).post("/api/chat").send({ messages: [] }).expect(400);
   });
 
   it("POST /api/chat streams ndjson tokens", async () => {
@@ -86,11 +83,9 @@ describe("API integration", () => {
 
   it("POST /api/chat stream failure sends terminal ndjson error", async () => {
     const chatService = createMockChatService({
-      streamChat: vi
-        .fn()
-        .mockImplementation(async function* () {
-          throw new HttpError(502, "ollama_unreachable_or_timed_out");
-        }),
+      streamChat: vi.fn().mockImplementation(async () => {
+        throw new HttpError(502, "ollama_unreachable_or_timed_out");
+      }),
     });
 
     const app = createApp({
@@ -107,4 +102,3 @@ describe("API integration", () => {
     expect(res.text).toContain(`"done":true`);
   });
 });
-
