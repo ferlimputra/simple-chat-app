@@ -50,7 +50,39 @@ function getRequestMessages(nextUserMessage: ChatMessage) {
     .slice(-maxContextMessages);
 }
 
-async function streamAssistantReply(requestMessages: ChatMessage[], assistantMessage: ChatMessage) {
+type StreamPayload = {
+  token?: string;
+  done?: boolean;
+  error?: string;
+};
+
+async function* readNdjsonStream(body: ReadableStream<Uint8Array>): AsyncGenerator<StreamPayload> {
+  const reader = body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      yield JSON.parse(trimmed) as StreamPayload;
+    }
+  }
+
+  const tail = buffer.trim();
+  if (tail) {
+    yield JSON.parse(tail) as StreamPayload;
+  }
+}
+
+async function createStreamResponse(requestMessages: ChatMessage[]) {
   const res = await fetch("/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -73,40 +105,17 @@ async function streamAssistantReply(requestMessages: ChatMessage[], assistantMes
     throw new Error("No response body");
   }
 
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = "";
+  return res;
+}
 
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
+async function streamAssistantReply(requestMessages: ChatMessage[], assistantMessage: ChatMessage) {
+  const res = await createStreamResponse(requestMessages);
 
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split("\n");
-    buffer = lines.pop() ?? "";
-
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed) continue;
-      const payload = JSON.parse(trimmed) as { token?: string; done?: boolean; error?: string };
-
-      if (payload.error) {
-        throw new Error(payload.error);
-      }
-
-      if (typeof payload.token === "string") {
-        assistantMessage.content += payload.token;
-        renderMessages();
-      }
-    }
-  }
-
-  const tail = buffer.trim();
-  if (tail) {
-    const payload = JSON.parse(tail) as { token?: string; error?: string };
+  for await (const payload of readNdjsonStream(res.body as ReadableStream<Uint8Array>)) {
     if (payload.error) {
       throw new Error(payload.error);
     }
+
     if (typeof payload.token === "string") {
       assistantMessage.content += payload.token;
       renderMessages();
