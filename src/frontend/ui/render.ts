@@ -1,4 +1,5 @@
 import { ChatMessage } from "../types.ts";
+import { createMarkdownElement } from "../utils/markdown.ts";
 import { messagesEl, statusEl } from "./dom.ts";
 
 function escapeForText(value: string): string {
@@ -7,10 +8,19 @@ function escapeForText(value: string): string {
 }
 
 export function createMessageEl(msg: ChatMessage): HTMLDivElement {
-  const el = document.createElement("div");
-  el.className = `message message--${msg.role}`;
-  el.textContent = escapeForText(msg.content);
-  return el;
+  const wrapper = document.createElement("div");
+  wrapper.className = `message message--${msg.role}`;
+
+  if (msg.role === "assistant") {
+    // Render assistant messages as markdown
+    const mdElement = createMarkdownElement(msg.content);
+    wrapper.appendChild(mdElement);
+  } else {
+    // Render user messages as plain text
+    wrapper.textContent = escapeForText(msg.content);
+  }
+
+  return wrapper;
 }
 
 export function renderMessages(messages: ChatMessage[]): void {

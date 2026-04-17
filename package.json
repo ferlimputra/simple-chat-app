@@ -23,10 +23,13 @@
   },
   "dependencies": {
     "cors": "^2.8.6",
+    "dompurify": "^3.4.0",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "express-rate-limit": "^8.3.2",
+    "github-markdown-css": "^5.9.0",
     "helmet": "^8.1.0",
+    "marked": "^18.0.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
