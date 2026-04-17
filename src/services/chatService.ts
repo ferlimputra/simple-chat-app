@@ -17,5 +17,6 @@ export type ChatResponse = {
 
 export interface ChatService {
   chat(request: ChatRequest): Promise<ChatResponse>;
+  streamChat(request: ChatRequest): AsyncGenerator<string, void, void>;
 }
 

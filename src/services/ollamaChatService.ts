@@ -17,16 +17,7 @@ export class OllamaChatService implements ChatService {
   }
 
   async chat(request: ChatRequest): Promise<ChatResponse> {
-    if (request.stream) {
-      // This initial feature is non-streaming. Streaming can be added later
-      // by introducing a stream-capable service + frontend SSE updates.
-      throw new HttpError(400, "streaming_not_supported");
-    }
-
-    const model = request.model ?? this.defaultModel;
-    if (!model) {
-      throw new HttpError(400, "missing_model");
-    }
+    const model = this.resolveModel(request.model);
 
     const assistantMessage = await this.ollamaClient.chat({
       model,
@@ -34,6 +25,25 @@ export class OllamaChatService implements ChatService {
     });
 
     return { assistantMessage };
+  }
+
+  async *streamChat(request: ChatRequest): AsyncGenerator<string, void, void> {
+    const model = this.resolveModel(request.model);
+
+    for await (const token of this.ollamaClient.streamChat({
+      model,
+      messages: request.messages,
+    })) {
+      yield token;
+    }
+  }
+
+  private resolveModel(requestModel?: string) {
+    const model = requestModel ?? this.defaultModel;
+    if (!model) {
+      throw new HttpError(400, "missing_model");
+    }
+    return model;
   }
 }
 

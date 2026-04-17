@@ -50,6 +50,70 @@ function getRequestMessages(nextUserMessage: ChatMessage) {
     .slice(-maxContextMessages);
 }
 
+async function streamAssistantReply(requestMessages: ChatMessage[], assistantMessage: ChatMessage) {
+  const res = await fetch("/api/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      messages: requestMessages,
+      stream: true,
+    }),
+    credentials: "same-origin",
+  });
+
+  if (!res.ok) {
+    const errBody = (await res.json().catch(() => null)) as
+      | { error?: string; message?: string }
+      | null;
+    const message = errBody?.message ?? errBody?.error ?? `Request failed (${res.status})`;
+    throw new Error(message);
+  }
+
+  if (!res.body) {
+    throw new Error("No response body");
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      const payload = JSON.parse(trimmed) as { token?: string; done?: boolean; error?: string };
+
+      if (payload.error) {
+        throw new Error(payload.error);
+      }
+
+      if (typeof payload.token === "string") {
+        assistantMessage.content += payload.token;
+        renderMessages();
+      }
+    }
+  }
+
+  const tail = buffer.trim();
+  if (tail) {
+    const payload = JSON.parse(tail) as { token?: string; error?: string };
+    if (payload.error) {
+      throw new Error(payload.error);
+    }
+    if (typeof payload.token === "string") {
+      assistantMessage.content += payload.token;
+      renderMessages();
+    }
+  }
+}
+
 async function sendChat() {
   const content = inputEl.value.trim();
   if (!content) return;
@@ -70,29 +134,7 @@ async function sendChat() {
   sendBtn.disabled = true;
 
   try {
-    const res = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        messages: requestMessages,
-      }),
-      credentials: "same-origin",
-    });
-
-    if (!res.ok) {
-      const errBody = (await res.json().catch(() => null)) as
-        | { error?: string; message?: string; details?: unknown }
-        | null;
-      const message =
-        errBody?.message ??
-        errBody?.error ??
-        `Request failed (${res.status})`;
-      throw new Error(message);
-    }
-
-    const data = (await res.json()) as { assistantMessage: string };
-    assistantMessage.content = data.assistantMessage;
-    renderMessages();
+    await streamAssistantReply(requestMessages, assistantMessage);
     setStatus("Ready", "normal");
   } catch (err) {
     assistantMessage.content =
